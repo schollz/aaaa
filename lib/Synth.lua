@@ -44,16 +44,43 @@ function Synth:init()
 
   -- initialize ero for each property
   for _,k in ipairs(props) do
-    self.prop[k]=Ero:new({map=maps[k]})
+    self.eros[k]=Ero:new({map=maps[k]})
   end
 
   self.playing=false
+  self.notes_on={}
 end
 
+function Synth:trig()
+  local p={}
+  for k,ero in pairs(self.eros) do
+    p[k]=ero:get_mapped()
+  end
+
+  -- turn off notes that are done
+  local notes_done={}
+  for k,v in pairs(self.notes_on) do
+    self.notes_on[k].beats=v.beats+1
+    if self.notes_on[k].beats==v.duration then
+      -- note is done
+      table.insert(notes_done,k)
+    end
+  end
+  for _,note in ipairs(notes_done) do
+    -- TODO: turn off note
+    self.notes_on[k]=nil
+  end
+
+  -- turn on new note
+  self.notes_on[p.pitch]={beats=0,duration=p.duration}
+  -- TODO: turn on note in engine
+end
+
+-- shared between sample and synth
 function Synth:play()
   self.playing=true
-  for _,k in pairs(self.prop) do
-    self.prop[k]:reset()
+  for _,ero in pairs(self.eros) do
+    ero:reset()
   end
 end
 
@@ -63,32 +90,23 @@ end
 
 -- set_div(div) where div=1/4, 1/8, etc.
 function Synth:set_div(k,div)
-  self.prop[k]:set_div(div)
+  self.eros[k]:set_div(div)
 end
 
 function Synth:set_steps(k,steps)
-  self.prop[k]:set_steps(div)
+  self.eros[k]:set_steps(div)
 end
 
 function Synth:set(k,i,kv)
-  self.prop[k]:set(i,kv)
+  self.eros[k]:set(i,kv)
 end
 
-function Synth:delta(i,kv)
-  for k,v in pairs(kv) do
-    self.ero[i].k=self.ero[i].k+v
-  end
-  self:recalculate()
+function Synth:delta(k,i,kv)
+  self.eros[k]:delta(i,kv)
 end
 
-function Synth:get(i)
-  local r={}
-  for k,v in pairs(self.ero[i]) do
-    r.k=v
-  end
-  r.op=ops[r.op]
-  r.div=divs[self.div]
-  return r
+function Synth:get(k,i)
+  return self.eros[k]:get(i)
 end
 
 -- inc increments the current step
@@ -96,15 +114,16 @@ function Synth:inc(div)
   if not self.playing then
     do return end
   end
-  for _,k in pairs(self.props) do
-    self.prop[k]:inc(div)
+  for _,ero in pairs(self.eros) do
+    ero:inc(div)
   end
+  self:trig()
 end
 
 -- eror returns the current
 -- euclidean rhythm operation result
-function Synth:get_res()
-  return self.res,self.resmap
+function Synth:get_res(k)
+  return self.eros[k]:get_res()
 end
 
 return Synth

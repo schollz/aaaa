@@ -81,6 +81,11 @@ function Ero:set_div(div)
   end
 end
 
+function Ero:set_map(map)
+  self.map=map
+  self:recalculate()
+end
+
 function Ero:set_steps(steps)
   self.steps=steps
   self:recalculate()
@@ -122,6 +127,11 @@ end
 -- euclidean rhythm operation result
 function Ero:get_res()
   return self.res,self.resmap
+end
+
+-- get_mapped returns the mapped value
+function Ero:get_mapped()
+  return self.resmap[self.step]
 end
 
 return Ero
