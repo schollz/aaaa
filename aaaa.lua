@@ -36,9 +36,14 @@ function init()
   		if aaaa.steps>0 then
 				local res=er_compute(aaaa.steps,aaaa.values,aaaa.operations)
 				print(res[step])
-				local ind=math.floor(res[step]+24)
-				if ind~=nil then
-					engine.hz(musicutil.note_num_to_freq(notes[ind]))
+				if res[step]~=0 then
+					if res[step]>0 then
+						res[step]=res[step]-1
+					end
+					local ind=math.floor(res[step]+24)
+					if ind~=nil then
+						engine.hz(musicutil.note_num_to_freq(notes[ind]))
+					end
 				end
   		end
   	end,
