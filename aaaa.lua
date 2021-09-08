@@ -1,10 +1,22 @@
 -- _
 --
+-- E1 switches synth/sample
+-- E2 switches operation
+-- E3 changes operation value
+-- K1/K2 switches property
+-- K1+K2 toggles current track
+-- K1+K3 toggles all tracks
+-- K1+E1 copies shared props
+-- K1+E3 moves through rand props
+-- hold K1 to see mapped values
 --
 
-local er=require("er")
-local lattice=require("lattice")
-local musicutil=require("musicutil")
+er=require("er")
+lattice=require("lattice")
+musicutil=require("musicutil")
+Ero=include("aaaa/lib/Ero")
+Eros=include("aaaa/lib/Eros")
+Synth=include("aaaa/lib/Synth")
 
 engine.name="PolyPerc"
 local shift=false
