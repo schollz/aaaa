@@ -4,15 +4,11 @@ local Ero={}
 local divs={1/32,1/16,1/8,1/4,1/2,1}
 local ops={"+","-","x","/","%"}
 
+-- new can define map {map={1,2,3,4}}
 function Ero:new(o)
   o=o or {}
   setmetatable(o,self)
   self.__index=self
-  local map={}
-  for i=-31,31 do
-    table.insert(map,i)
-  end
-  o.map=o.map or map
   o:init()
   return o
 end
@@ -66,8 +62,12 @@ function Ero:recalculate()
   -- clamp values and map them
   for i,v in ipairs(self.res) do
     self.res[i]=util.clamp(v,-31,31)
-    local ind=math.floor(util.linlin(-31,31,1,#self.map+0.9999,self.res[i]))
-    self.resmap[i]=self.map[ind]
+    if self.map~=nil then
+      local ind=math.floor(util.linlin(-31,31,1,#self.map+0.9999,self.res[i]))
+      self.resmap[i]=self.map[ind]
+    else
+      self.resmap[i]=self.res[i]
+    end
   end
 end
 
@@ -120,7 +120,7 @@ end
 
 -- eror returns the current
 -- euclidean rhythm operation result
-function Ero:eror()
+function Ero:get_res()
   return self.res,self.resmap
 end
 
