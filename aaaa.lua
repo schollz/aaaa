@@ -18,6 +18,7 @@ aaaa={
 	--       m n r
 	values={{1,8,0},{2,7,0},{3,4,0},{-7,5,1}},
 }
+transpose=0
 
 function init()
 	print("started _")
@@ -40,7 +41,7 @@ function init()
 					if res[step]>0 then
 						res[step]=res[step]-1
 					end
-					local ind=math.floor(res[step]+24)
+					local ind=math.floor(res[step]+24+transpose)
 					if ind~=nil then
 						engine.hz(musicutil.note_num_to_freq(notes[ind]))
 					end
