@@ -42,7 +42,7 @@ function Ero:recalculate()
     self.resmap[i]=1
   end
   for i,vs in ipairs(self.ero) do
-    local ev=er.gen(self.p,self.steps,self.w)
+    local ev=ER.gen(self.p,self.steps,self.w)
     for j,has_step in ipairs(ev) do
       if has_step then
         if self.op[i]==1 then

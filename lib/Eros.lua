@@ -40,6 +40,7 @@ function Eros:stop()
   self.playing=false
 end
 
+
 function Eros:set_div(k,div)
   self.eros[k]:set_div(div)
 end
@@ -54,6 +55,10 @@ end
 
 function Eros:delta(k,i,kv)
   self.eros[k]:delta(i,kv)
+end
+
+function Eros:get_prop_num()
+  return #self.eros
 end
 
 function Eros:get(k,i)

@@ -11,126 +11,91 @@
 -- hold K1 to see mapped values
 --
 
-er=require("er")
-lattice=require("lattice")
-musicutil=require("musicutil")
+ER=require("er")
+Lattice=require("lattice")
+MusicUtil=require("musicutil")
 Ero=include("aaaa/lib/Ero")
 Eros=include("aaaa/lib/Eros")
 Synth=include("aaaa/lib/Synth")
 
 engine.name="PolyPerc"
-local shift=false
-local step=1
-local ops={"+","-","x","/","%"}
-local notes=musicutil.generate_scale_of_length(20,5,48)
-aaaa={
-  current=1,
-  steps=16,
-  operations={1,1,1,1},
-  --       m n r
-  values={{1,8,0},{2,7,0},{3,4,0},{-7,5,1}},
-  values={{1,16,0},{0,0,0},{0,0,0},{0,0,0}},
+-- program state
+s={
+  id_snd=1,
+  id_op=1,
+  id_prop=1,
+  shift=false,
 }
-transpose=0
+-- user state (saveable)
+u={
+  snd={},
+}
 
 function init()
-  print("started _")
-  redraw()
-
-  local seq=lattice:new{
+  for i=1,2 do
+    u.snd[i]=Synth:new()
+  end
+  local divs={1/32,1/16,1/8,1/4,1/2,1}
+  s.playing=false
+  s.lattice=Lattice:new{
     ppqn=96
   }
-  seq:new_pattern{
-    action=function(t)
-      step=step+1
-      if step>aaaa.steps then
-        step=1
-      end
-      redraw()
-      if aaaa.steps>0 then
-        local res=er_compute(aaaa.steps,aaaa.values,aaaa.operations)
-        if res[step]~=0 then
-          if res[step]>0 then
-            res[step]=res[step]-1
-          end
-          local ind=math.floor(res[step]+24+transpose)
-          if ind~=nil then
-            engine.hz(musicutil.note_num_to_freq(notes[ind]))
-          end
+  for _,div in ipairs(divs) do
+    s.lattice:new_pattern{
+      action=function(t)
+        for _,snd in ipairs(u.snd) do
+          snd.inc(div)
         end
-      end
-    end,
-    division=1/8,
-  }
-  seq:start()
+      end,
+      division=div,
+    }
+  end
+
+  clock.run(function()
+    while true do
+      redraw()
+      clock.sleep(1/15)
+    end
+  end)
 end
 
 
 function enc(k,d)
   if shift then
-    if k==1 then
-      aaaa.steps=util.clamp(aaaa.steps+sign(d),0,16)
-    elseif k==2 then
-      aaaa.current=util.clamp(aaaa.current+sign(d),1,4)
-    else
-      if aaaa.current>1 then
-        aaaa.operations[aaaa.current]=util.clamp(aaaa.operations[aaaa.current]+sign(d),1,5)
-      end
-    end
   else
     if k==1 then
-      aaaa.values[aaaa.current][1]=aaaa.values[aaaa.current][1]+sign(d)
-      aaaa.values[aaaa.current][1]=util.clamp(aaaa.values[aaaa.current][1],-31,31)
+      s.id_snd=util.clamp(s.id_snd+sign(d),1,#u.snd)
     elseif k==2 then
-      aaaa.values[aaaa.current][2]=aaaa.values[aaaa.current][2]+sign(d)
-      aaaa.values[aaaa.current][2]=util.clamp(aaaa.values[aaaa.current][2],0,aaaa.steps)
-    else
-      aaaa.values[aaaa.current][3]=aaaa.values[aaaa.current][3]+sign(d)
-      aaaa.values[aaaa.current][3]=util.clamp(aaaa.values[aaaa.current][3],0,aaaa.steps-1)
+      s.id_op=util.clamp(s.id_op+sign(d),1,18)
+    elseif k==3 then
+      change_op(sign(d))
     end
   end
-  redraw()
+end
+
+function change_op(d)
+  -- TODO: every operation should go here
 end
 
 function key(k,z)
   if k==1 then
     shift=z==1
   end
-  redraw()
-end
+  if k>1 and shift then
+    if k==2 then
 
-function er_compute(steps,values,operations)
-  local res={}
-  for i=1,steps do
-    res[i]=0
-  end
-  for i,vs in ipairs(values) do
-    local m=vs[1] -- multiplier
-    local k=vs[2] -- pulses
-    local n=steps -- steps
-    local w=vs[3] -- shift
-    local ev=er.gen(k,n,w)
-    for j,has_step in ipairs(ev) do
-      if has_step then
-        if operations[i]==1 then
-          res[j]=res[j]+m
-        elseif operations[i]==2 then
-          res[j]=res[j]-m
-        elseif operations[i]==3 then
-          res[j]=res[j]*m
-        elseif operations[i]==4 then
-          res[j]=res[j]/m
-        elseif operations[i]==5 then
-          res[j]=res[j]%m
-        end
+    elseif k==3 then
+      if not s.playing then
+        s.lattice:hard_restart()
+      else
+        s.lattice:stop()
       end
+      s.playing=not s.playing
     end
+  elseif k>1 and not shift then
+    z=z*2-5
+    s.id_prop=util.clamp(s.id_prop+sign(d),1,u.snd[s.id_snd]:get_prop_num())
   end
-  -- clamp values
-  for i,v in ipairs(res) do
-    res[i]=util.clamp(v,-31,31)
-  end
-  return res
 end
 
 function redraw()
