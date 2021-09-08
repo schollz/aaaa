@@ -14,9 +14,10 @@ local notes = musicutil.generate_scale_of_length(20, 5, 48)
 aaaa={	
 	current=1,
 	steps=16,
-	operations={1,3,1,1},
+	operations={1,1,1,1},
 	--       m n r
 	values={{1,8,0},{2,7,0},{3,4,0},{-7,5,1}},
+	values={{1,16,0},{0,0,0},{0,0,0},{0,0,0}},
 }
 transpose=0
 
@@ -36,7 +37,6 @@ function init()
   		redraw()
   		if aaaa.steps>0 then
 				local res=er_compute(aaaa.steps,aaaa.values,aaaa.operations)
-				print(res[step])
 				if res[step]~=0 then
 					if res[step]>0 then
 						res[step]=res[step]-1
@@ -68,7 +68,7 @@ function enc(k,d)
 	else
 		if k==1 then
 			aaaa.values[aaaa.current][1]=aaaa.values[aaaa.current][1]+sign(d)
-			aaaa.values[aaaa.current][1]=util.clamp(aaaa.values[aaaa.current][1],-22,22)
+			aaaa.values[aaaa.current][1]=util.clamp(aaaa.values[aaaa.current][1],-31,31)
 		elseif k==2 then
 			aaaa.values[aaaa.current][2]=aaaa.values[aaaa.current][2]+sign(d)
 			aaaa.values[aaaa.current][2]=util.clamp(aaaa.values[aaaa.current][2],0,aaaa.steps)
@@ -116,30 +116,42 @@ function er_compute(steps,values,operations)
 	end
 	-- clamp values
 	for i,v in ipairs(res) do
-		res[i]=util.clamp(v,-23,23)
+		res[i]=util.clamp(v,-31,31)
 	end
 	return res
 end
 
 function redraw()
 	screen.clear()
+
+	screen.level(15)
+	screen.rect(1,1,46,63)
+	screen.stroke()
+
+	screen.level(15)
+	screen.rect(1,1,46,8)
+	screen.fill()
+
+	screen.level(0)
+	screen.move(23,6)
+	screen.text_center("synth 1")
+
+	screen.level(15)
+	screen.move(23,16)
+	screen.text_center("pitch")
+
+
 	local res=er_compute(aaaa.steps,aaaa.values,aaaa.operations)
-	local max_value=23 -- TODO: don't do if not scaling
-	for i,r in ipairs(res) do
-		if math.abs(r) > max_value then
-			max_value=math.abs(r)
-		end
-	end
 	for i,r in ipairs(res) do
 		screen.level(2)
 		if step==i then
 			screen.level(15)
 		end
-		rabs = math.floor(math.abs(r)/max_value*23)
+		rabs = math.abs(r)
 		local x=49+(5*(i-1))
-		local y=23-rabs
+		local y=32-rabs
 		if r<0 then
-			y=24
+			y=33
 		end
 		screen.rect(x,y,4,rabs)
 		screen.fill()
@@ -150,23 +162,24 @@ function redraw()
 			screen.level(15)
 		end
 		local x=49+(5*(i-1))
-		local y=24
+		local y=33
 		screen.move(x,y)
 		screen.line(x+4,y)
 		screen.stroke()
 	end
 
-	screen.move(22,12)
-	screen.level(15)
-	screen.text_center("pitch")
+	local xp=8
+	local yp=21
+	local rowh=9
+	local roww=11
 	for i,vs in ipairs(aaaa.values) do
 		screen.level(2)
 		if aaaa.current==i then
 			screen.level(15)
 		end
 		for j,v in ipairs(vs) do
-			local x=12+(j-1)*10
-			local y=23+(i-1)*10
+			local x=xp+8+(j-1)*roww
+			local y=yp+5+(i-1)*rowh
 			screen.move(x,y)
 			screen.text_center(v)
 		end
@@ -177,20 +190,21 @@ function redraw()
 			screen.level(15)
 		end
 		if i > 1 then
-			local x=4
-			local y=20+(i-1)*10
+			local x=xp-2
+			local y=yp+(i-1)*rowh
 			screen.move(x,y)
 			screen.text_center(ops[v])
 		end
 	end
 
-	if shift then
-		screen.move(1,62)
-		screen.text("K1 steps K2 switches K3 op")
-	else
-		screen.move(1,62)
-		screen.text("K1 num K2 # pulses K3 shift")
-	end
+
+	screen.level(15)
+	screen.rect(1,56,46,8)
+	screen.fill()
+
+	screen.level(0)
+	screen.move(23,62)
+	screen.text_center("n=16, 1/4")
 	screen.update()
 end
 
