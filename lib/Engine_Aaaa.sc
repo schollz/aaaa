@@ -13,13 +13,109 @@ Engine_Aaaa : CroneEngine {
 	var pedalSustainNotes;
 	var pedalSostenutoNotes;
 	// </synthy>
-
+	// <samples>
+	var sampleVoice;
+	var sampleVoiceBuffer;
+	// </samples>
 
 	*new { arg context, doneCallback;
 		^super.new(context, doneCallback);
 	}
 
 	alloc {
+		// <samples>
+		sampleVoice=Dictionary.new;
+		sampleVoiceBuffer=Dictionary.new;
+
+		SynthDef("samplePlayer", {
+			arg out=0, bufnum=0, rate=1, rateLag=0,start=0, end=1, reset=0, t_trig=1,
+			loops=1, amp=0.5;
+			var snd,snd2,pos,pos2,frames,duration,env;
+			var startA,endA,startB,endB,resetA,resetB,crossfade,aOrB;
+
+			// latch to change trigger between the two
+			aOrB=ToggleFF.kr(t_trig);
+			startA=Latch.kr(start,aOrB);
+			endA=Latch.kr(end,aOrB);
+			resetA=Latch.kr(reset,aOrB);
+			startB=Latch.kr(start,1-aOrB);
+			endB=Latch.kr(end,1-aOrB);
+			resetB=Latch.kr(reset,1-aOrB);
+			crossfade=Lag.ar(K2A.ar(aOrB),0.02);
+
+
+			rate = Lag.kr(rate,rateLag);
+			rate = rate*BufRateScale.kr(bufnum);
+			frames = BufFrames.kr(bufnum);
+			duration = frames*(end-start)/rate.abs/s.sampleRate*loops;
+
+			// envelope to clamp looping
+			env=EnvGen.ar(
+				Env.new(
+					levels: [0,1,1,0],
+					times: [0,duration-0.02,0.02],
+				),
+				gate:t_trig,
+			);
+
+			pos=Phasor.ar(
+				trig:aOrB,
+				rate:rate,
+				start:(((rate>0)*startA)+((rate<0)*endA))*frames,
+				end:(((rate>0)*endA)+((rate<0)*startA))*frames,
+				resetPos:(((rate>0)*resetA)+((rate<0)*endA))*frames,
+			);
+			snd=BufRd.ar(
+				numChannels:2,
+				bufnum:bufnum,
+				phase:pos,
+				interpolation:4,
+			);
+
+			// add a second reader
+			pos2=Phasor.ar(
+				trig:(1-aOrB),
+				rate:rate,
+				start:(((rate>0)*startB)+((rate<0)*endB))*frames,
+				end:(((rate>0)*endB)+((rate<0)*startB))*frames,
+				resetPos:(((rate>0)*resetB)+((rate<0)*endB))*frames,
+			);
+			snd2=BufRd.ar(
+				numChannels:2,
+				bufnum:bufnum,
+				phase:pos2,
+				interpolation:4,
+			);
+
+			Out.ar(out,(crossfade*snd)+((1-crossfade)*snd2) * env * amp)
+		}).add;
+
+		this.addCommand("sample_trigger", "sff", { arg msg;
+			var file=msg[1];
+			var amp=msg[2];
+			var rate=msg[3];
+			if (sampleVoiceBuffer.at(file)==nil,{
+				sampleVoiceBuffer.put(file,Buffer.read(context.server,file,action:{
+					arg buffer;
+					sampleVoice.put(file,
+						Synth.new(context.server,"samplePlayer",[
+							\t_trig,1,
+							\bufnum,buffer,
+							\amp,amp,
+							\rate,rate,
+							\out,0,
+						]);
+					);
+				}));
+			},{
+				sampleVoice.at(file).set(
+					\t_trig,1,
+					\amp,amp,
+					\rate,rate,
+				);
+			});
+		});
+		// </samples>
 
 		// <synthy>
 		// initialize variables

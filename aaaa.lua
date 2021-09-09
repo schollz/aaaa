@@ -18,8 +18,10 @@ MusicUtil=require("musicutil")
 Ero=include("aaaa/lib/Ero")
 Eros=include("aaaa/lib/Eros")
 Synth=include("aaaa/lib/Synth")
+Sample=include("aaaa/lib/Sample")
 
 engine.name="Aaaa"
+
 -- program state
 s={
   id_snd=1,-- index of the current synth or sample
@@ -36,12 +38,14 @@ local divs={1/32,1/16,1/8,1/4,1/2,1}
 local divs_name={"tn","sn","en","qn","hn","wn"}
 
 function init()
-  for i=1,3 do
-    u.snd[i]=Synth:new("synth "..i)
-    for prop,_ in pairs(u.snd[i].eros) do
-      u.snd[i].eros[prop]:random()
-    end
-  end
+  -- for i=1,3 do
+  --   u.snd[i]=Synth:new("synth "..i)
+  --   for prop,_ in pairs(u.snd[i].eros) do
+  --     u.snd[i].eros[prop]:random()
+  --   end
+  -- end
+  u.snd[1]=Sample:new("/home/we/dust/code/aaaa/samples/ch001.wav")
+
   s.playing=false
   s.lattice=Lattice:new{
     ppqn=96

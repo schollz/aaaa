@@ -8,14 +8,6 @@ function Sample:new(name)
     table.insert(maps.velocity,(i-1)*2) -- 0 to 124 (sorta midi range)
   end
   maps.rate={-2,-1,-0.5,0.5,1,1.5,2,2.5,4}
-  -- middle duration is one note
-  maps.duration={}
-  for i=8,1,-1 do
-    table.insert(maps.duration,i)
-  end
-  for i=1,8 do
-    table.insert(maps.duration,i)
-  end
   -- trigger is only 1 above 0
   maps.trigger={}
   for i=1,32 do
@@ -35,11 +27,13 @@ function Sample:new(name)
   s:set_maps(maps)
   s:set_action(function(p)
     if p.trigger>0 then
+      engine.sample(name,p.velocity/127,p.rate)
       Tabutil.print(p)
     end
   end)
-  s.props={"trigger","rate","velocity","duration"}
-  s.name=name
+  s.props={"trigger","rate","velocity"}
+  local pathname,filename,ext=string.match(name,"(.-)([^\\/]-%.?([^%.\\/]*))$")
+  s.name=filename
   return s
 end
 
