@@ -5,23 +5,28 @@ function Eros:new(o)
   setmetatable(o,self)
   self.__index=self
   -- initialize ero for each property
-  if o.maps~=nil then
-    for k,map in ipairs(o.maps) do
-      o.eros[k]=Ero:new({map=map})
-    end
-  end
   o.playing=false
   return o
 end
 
 
+
 function Eros:trig()
+  -- print("Eros: trig")
   local p={}
   for k,ero in pairs(self.eros) do
+    -- print(k,ero:get_mapped())
     p[k]=ero:get_mapped()
   end
   if self.fn_trig~=nil then
     self.fn_trig(p)
+  end
+end
+
+function Eros:set_maps(maps)
+  self.eros={}
+  for k,map in pairs(maps) do
+    self.eros[k]=Ero:new({map=map})
   end
 end
 
@@ -40,8 +45,8 @@ function Eros:stop()
   self.playing=false
 end
 
-function Eros:toggle_play() 
-  if self.playing then 
+function Eros:toggle_playing()
+  if self.playing then
     self:stop()
   else
     self:play()
@@ -58,14 +63,20 @@ function Eros:get(prop,i)
 end
 
 -- inc increments the current step
-function Eros:inc(div)
+function Eros:next(div)
   if not self.playing then
     do return end
   end
+  local trigged=false
   for _,ero in pairs(self.eros) do
-    ero:inc(div)
+    if ero.div==div then
+      trigged=true
+      ero:inc(div)
+    end
   end
-  self:trig()
+  if trigged then
+    self:trig()
+  end
 end
 
 -- eror returns the current

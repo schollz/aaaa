@@ -13,6 +13,7 @@
 
 ER=require("er")
 Lattice=require("lattice")
+Tabutil=require("tabutil")
 MusicUtil=require("musicutil")
 Ero=include("aaaa/lib/Ero")
 Eros=include("aaaa/lib/Eros")
@@ -21,9 +22,9 @@ Synth=include("aaaa/lib/Synth")
 engine.name="PolyPerc"
 -- program state
 s={
-  id_snd=1,  -- index of the current synth or sample
-  id_op=1,   -- index of the current operation (1-18)
-  id_prop=1, -- index of the current property (defined by the snd)
+  id_snd=1,-- index of the current synth or sample
+  id_op=1,-- index of the current operation (1-18)
+  id_prop=1,-- index of the current property (defined by the snd)
   shift=false,
 }
 -- user state (saveable)
@@ -37,18 +38,21 @@ local divs_name={"tn","sn","en","qn","hn","wn"}
 function init()
   for i=1,2 do
     u.snd[i]=Synth:new("synth "..i)
+    for prop,_ in pairs(u.snd[i].eros) do
+      u.snd[i].eros[prop]:random()
+    end
   end
   s.playing=false
   s.lattice=Lattice:new{
     ppqn=96
   }
-  for _,div in ipairs(divs) do
+  for id_div,div in ipairs(divs) do
     s.lattice:new_pattern{
       action=function(t)
         for _,snd in ipairs(u.snd) do
           -- sound only steps when its the correct division
           -- and its currently playing
-          snd.inc(div) 
+          snd:next(id_div)
         end
       end,
       division=div,
@@ -61,6 +65,15 @@ function init()
       clock.sleep(1/15)
     end
   end)
+
+
+  u.snd[1]:toggle_playing()
+  u.snd[2]:toggle_playing()
+  if not s.playing then
+    s.lattice:hard_restart()
+  else
+    s.lattice:stop()
+  end
 end
 
 
@@ -78,17 +91,31 @@ function enc(k,d)
 end
 
 function change_op(d)
-  local snd=u.snd[id_snd]
-  local prop=snd.props[id_prop]
+  local snd=u.snd[s.id_snd]
+  local prop=snd.props[s.id_prop]
   local id_op_val=0
   --  every operation should go here
+  id_op_val=id_op_val+1
+  if id_op_val==s.id_op then
+    snd:toggle_playing()
+  end
+  id_op_val=id_op_val+1
+  if id_op_val==s.id_op then
+    -- change number of steps
+    snd:delta(prop,{steps=d})
+  end
+  id_op_val=id_op_val+1
+  if id_op_val==s.id_op then
+    -- change div
+    snd:delta(prop,{div=d})
+  end
   for i=1,4 do
     -- operation
     if i>1 then
       id_op_val=id_op_val+1
       if id_op_val==s.id_op then
         -- change op
-        snd:delta(prop,{op=id_op_val},i)
+        snd:delta(prop,{op=d},i)
       end
     end
     -- m, p, w
@@ -105,20 +132,6 @@ function change_op(d)
       snd:delta(prop,{w=d},i)
     end
   end
-  id_op_val=id_op_val+1
-  if id_op_val==s.id_op then
-    -- change number of steps
-    snd:delta(prop,{steps=d})
-  end
-  id_op_val=id_op_val+1
-  if id_op_val==s.id_op then
-    -- change div
-    snd:delta(prop,{div=d})
-  end
-  id_op_val=id_op_val+1
-  if id_op_val==s.id_op then
-    snd:toggle_playing()
-  end
 end
 
 function key(k,z)
@@ -129,24 +142,30 @@ function key(k,z)
     if k==2 then
 
     elseif k==3 then
+      u.snd[1]:toggle_playing()
       if not s.playing then
         s.lattice:hard_restart()
       else
         s.lattice:stop()
       end
-      s.playing=not s.playing
     end
-  elseif k>1 and not shift then
-    z=z*2-5
-    s.id_prop=util.clamp(s.id_prop+sign(d),1,#u.snd[s.id_snd].props)
+  elseif k>1 and not shift and z==1 then
+    local d=k*2-5
+    s.id_prop=util.clamp(s.id_prop+d,1,#u.snd[s.id_snd].props)
   end
 end
 
 function redraw()
   screen.clear()
 
-  local snd=u.snd[id_snd]
-  local prop=snd.props[id_prop]
+  local snd=u.snd[s.id_snd]
+  if snd==nil then
+    do return end
+  end
+  if snd.eros==nil then
+    do return end
+  end
+  local prop=snd.props[s.id_prop]
 
 
   screen.level(15)
@@ -161,16 +180,33 @@ function redraw()
   screen.move(23,6)
   screen.text_center(snd.name)
 
-  screen.level(15)
+  if s.id_op==1 then
+    screen.level(15)
+  else
+    screen.level(2)
+  end
+  screen.move(10,16)
+  screen.text_center(snd.playing and ">" or "||")
+  if s.id_op==2 then
+    screen.level(15)
+  else
+    screen.level(2)
+  end
   screen.move(23,16)
-  screen.text_center(prop)
-
+  screen.text_center(snd.eros[prop].steps)
+  if s.id_op==3 then
+    screen.level(15)
+  else
+    screen.level(2)
+  end
+  screen.move(37,16)
+  screen.text_center(divs_name[snd.eros[prop].div])
 
   -- draw rectangles
   local res=snd.eros[prop]:get_res()
   for i,r in ipairs(res) do
     screen.level(2)
-    if step==i then
+    if snd.eros[prop].step==i then
       screen.level(15)
     end
     rabs=math.abs(r)
@@ -184,7 +220,7 @@ function redraw()
   end
   for i,_ in ipairs(res) do
     screen.level(2)
-    if step==i then
+    if snd.eros[prop].step==i then
       screen.level(15)
     end
     local x=49+(5*(i-1))
@@ -199,9 +235,9 @@ function redraw()
   local yp=21
   local rowh=9
   local roww=11
-  local id_op_val=0
+  local id_op_val=3
   for i=1,4 do
-    local ero=snd.eros[prop].get(i)
+    local ero=snd.eros[prop]:get(i)
     -- operation
     if i>1 then
       id_op_val=id_op_val+1
@@ -238,9 +274,7 @@ function redraw()
 
   screen.level(0)
   screen.move(23,62)
-  local ero=snd.eros[prop].get(1)
-  -- TODO: highlight these things when they get selected
-  screen.text_center(ero.steps.." "..divs_name[ero.div].." "..("play" and snd.playing or "stop"))
+  screen.text_center(prop)
   screen.update()
 end
 

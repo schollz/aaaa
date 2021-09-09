@@ -27,9 +27,28 @@ function Ero:init()
   self.div=4 -- qn
   self.step=0
   self.steps=16
+  self:recalculate()
 end
 
-function Ero:play()
+function Ero:random()
+  for i=1,4 do
+    self.ero[i].op=math.random(1,4) -- operation
+    if self.ero[i].op>2 then
+      self.ero[i].m=math.random(-2,2) -- multipler
+      if self.ero[i].m==0 then
+        self.ero[i].m=1
+      end
+    else
+      self.ero[i].m=math.random(-15,15) -- multipler
+    end
+    self.ero[i].p=math.random(2,10) -- pulse
+    self.ero[i].w=math.random(1,2) -- shift
+  end
+  self:clamp()
+  self:recalculate()
+end
+
+function Ero:reset()
   self.step=0
 end
 
@@ -41,20 +60,23 @@ function Ero:recalculate()
     self.res[i]=0
     self.resmap[i]=1
   end
-  for i,vs in ipairs(self.ero) do
-    local ev=ER.gen(self.p,self.steps,self.w)
+  if self.steps==0 then
+    do return end
+  end
+  for i,ero in ipairs(self.ero) do
+    local ev=ER.gen(ero.p,self.steps,ero.w)
     for j,has_step in ipairs(ev) do
       if has_step then
-        if self.op[i]==1 then
-          self.res[j]=self.res[j]+m
-        elseif self.op[i]==2 then
-          self.res[j]=self.res[j]-m
-        elseif self.op[i]==3 then
-          self.res[j]=self.res[j]*m
-        elseif self.op[i]==4 then
-          self.res[j]=self.res[j]/m
-        elseif self.op[i]==5 then
-          self.res[j]=self.res[j]%m
+        if ero.op==1 then
+          self.res[j]=self.res[j]+ero.m
+        elseif ero.op==2 then
+          self.res[j]=self.res[j]-ero.m
+        elseif ero.op==3 then
+          self.res[j]=self.res[j]*ero.m
+        elseif ero.op==4 then
+          self.res[j]=self.res[j]/ero.m
+        elseif ero.op==5 then
+          self.res[j]=self.res[j]%ero.m
         end
       end
     end
@@ -73,10 +95,11 @@ end
 
 function Ero:delta(kv,i)
   for k,v in pairs(kv) do
+    print(k,v)
     if k=="div" or k=="steps" then
       self[k]=self[k]+v
     elseif i~=nil then
-      self.ero[i].k=self.ero[i].k+v
+      self.ero[i][k]=self.ero[i][k]+v
     end
   end
   self:clamp()
@@ -87,17 +110,17 @@ function Ero:clamp()
   for i=1,4 do
     self.ero[i].op=util.clamp(self.ero[i].op,1,#ops)
     self.ero[i].m=util.clamp(self.ero[i].m,-31,31)
-    self.ero[i].p=util.clamp(self.ero[i].p,0,self.steps)
-    self.ero[i].w=util.clamp(self.ero[i].w,0,self.steps-1)
+    self.ero[i].p=util.clamp(self.ero[i].p,0,16)
+    self.ero[i].w=util.clamp(self.ero[i].w,0,15)
   end
   self.div=util.clamp(self.div,1,#divs)
-  self.steps=util.clamp(self.steps,0,16)
+  self.steps=util.clamp(self.steps,1,16)
 end
 
 function Ero:get(i)
   local r={}
   for k,v in pairs(self.ero[i]) do
-    r.k=v
+    r[k]=v
   end
   r.op=ops[r.op]
   r.div=self.div
@@ -106,9 +129,6 @@ end
 
 -- inc increments the current step
 function Ero:inc(div)
-  if div~=divs[self.div] then
-    do return end
-  end
   self.step=(self.step%self.steps)+1
 end
 
