@@ -51,12 +51,14 @@ function init()
     ppqn=96
   }
   for id_div,div in ipairs(divs) do
+    local step=-1
     s.lattice:new_pattern{
       action=function(t)
+        step=step+1
         for _,snd in ipairs(u.snd) do
           -- sound only steps when its the correct division
           -- and its currently playing
-          snd:next(id_div)
+          snd:next(id_div,step)
         end
       end,
       division=div,

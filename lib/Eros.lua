@@ -60,14 +60,14 @@ function Eros:get(prop,i)
 end
 
 -- inc increments the current step
-function Eros:next(div)
+function Eros:next(div,step)
   if not self.playing then
     do return end
   end
   local trigged=false
   for prop,ero in pairs(self.eros) do
     if ero.div==div then
-      ero:inc(div)
+      ero:inc(div,step)
       if prop=="trigger" then
         trigged=true
       end
