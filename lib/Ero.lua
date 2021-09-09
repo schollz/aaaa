@@ -128,8 +128,8 @@ function Ero:get(i)
 end
 
 -- inc increments the current step
-function Ero:inc(div)
-  self.step=(self.step%self.steps)+1
+function Ero:inc(div,step)
+  self.step=(step%self.steps)+1
 end
 
 -- eror returns the current for all steps
