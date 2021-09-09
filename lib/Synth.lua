@@ -48,15 +48,12 @@ function Synth:new(name)
     end
   end)
   s.notes_on={}
-  s.props={"trigger","pitch","velocity"}
+  s.props={"trigger","pitch","velocity","duration","transpose"}
   s.name=name
   return s
 end
 
-
 function Synth:emit(p)
-  
-
 
   -- -- turn off notes that are done
   -- local notes_done={}
@@ -76,6 +73,5 @@ function Synth:emit(p)
   -- self.notes_on[p.pitch]={beats=0,duration=p.duration}
   -- -- TODO: turn on note in engine
 end
-
 
 return Synth

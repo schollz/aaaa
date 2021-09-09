@@ -3,6 +3,7 @@ format: lua-format.py
 	python3 lua-format.py lib/Eros.lua
 	python3 lua-format.py lib/Ero.lua
 	python3 lua-format.py lib/Synth.lua
+	python3 lua-format.py lib/Sample.lua
 	python3 lua-format.py aaaa.lua
 
 lua-format.py:
