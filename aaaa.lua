@@ -21,21 +21,23 @@ Synth=include("aaaa/lib/Synth")
 engine.name="PolyPerc"
 -- program state
 s={
-  id_snd=1,
-  id_op=1,
-  id_prop=1,
+  id_snd=1,  -- index of the current synth or sample
+  id_op=1,   -- index of the current operation (1-18)
+  id_prop=1, -- index of the current property (defined by the snd)
   shift=false,
 }
 -- user state (saveable)
 u={
   snd={},
 }
+-- constants
+local divs={1/32,1/16,1/8,1/4,1/2,1}
+local divs_name={"tn","sn","en","qn","hn","wn"}
 
 function init()
   for i=1,2 do
-    u.snd[i]=Synth:new()
+    u.snd[i]=Synth:new("synth "..i)
   end
-  local divs={1/32,1/16,1/8,1/4,1/2,1}
   s.playing=false
   s.lattice=Lattice:new{
     ppqn=96
@@ -44,7 +46,9 @@ function init()
     s.lattice:new_pattern{
       action=function(t)
         for _,snd in ipairs(u.snd) do
-          snd.inc(div)
+          -- sound only steps when its the correct division
+          -- and its currently playing
+          snd.inc(div) 
         end
       end,
       division=div,
@@ -74,7 +78,47 @@ function enc(k,d)
 end
 
 function change_op(d)
-  -- TODO: every operation should go here
+  local snd=u.snd[id_snd]
+  local prop=snd.props[id_prop]
+  local id_op_val=0
+  --  every operation should go here
+  for i=1,4 do
+    -- operation
+    if i>1 then
+      id_op_val=id_op_val+1
+      if id_op_val==s.id_op then
+        -- change op
+        snd:delta(prop,{op=id_op_val},i)
+      end
+    end
+    -- m, p, w
+    id_op_val=id_op_val+1
+    if id_op_val==s.id_op then
+      snd:delta(prop,{m=d},i)
+    end
+    id_op_val=id_op_val+1
+    if id_op_val==s.id_op then
+      snd:delta(prop,{p=d},i)
+    end
+    id_op_val=id_op_val+1
+    if id_op_val==s.id_op then
+      snd:delta(prop,{w=d},i)
+    end
+  end
+  id_op_val=id_op_val+1
+  if id_op_val==s.id_op then
+    -- change number of steps
+    snd:delta(prop,{steps=d})
+  end
+  id_op_val=id_op_val+1
+  if id_op_val==s.id_op then
+    -- change div
+    snd:delta(prop,{div=d})
+  end
+  id_op_val=id_op_val+1
+  if id_op_val==s.id_op then
+    snd:toggle_playing()
+  end
 end
 
 function key(k,z)
@@ -94,12 +138,16 @@ function key(k,z)
     end
   elseif k>1 and not shift then
     z=z*2-5
-    s.id_prop=util.clamp(s.id_prop+sign(d),1,u.snd[s.id_snd]:get_prop_num())
+    s.id_prop=util.clamp(s.id_prop+sign(d),1,#u.snd[s.id_snd].props)
   end
 end
 
 function redraw()
   screen.clear()
+
+  local snd=u.snd[id_snd]
+  local prop=snd.props[id_prop]
+
 
   screen.level(15)
   screen.rect(1,1,46,63)
@@ -111,14 +159,15 @@ function redraw()
 
   screen.level(0)
   screen.move(23,6)
-  screen.text_center("synth 1")
+  screen.text_center(snd.name)
 
   screen.level(15)
   screen.move(23,16)
-  screen.text_center("pitch")
+  screen.text_center(prop)
 
 
-  local res=er_compute(aaaa.steps,aaaa.values,aaaa.operations)
+  -- draw rectangles
+  local res=snd.eros[prop]:get_res()
   for i,r in ipairs(res) do
     screen.level(2)
     if step==i then
@@ -145,32 +194,40 @@ function redraw()
     screen.stroke()
   end
 
+  -- write down the actual values
   local xp=8
   local yp=21
   local rowh=9
   local roww=11
-  for i,vs in ipairs(aaaa.values) do
-    screen.level(2)
-    if aaaa.current==i then
-      screen.level(15)
+  local id_op_val=0
+  for i=1,4 do
+    local ero=snd.eros[prop].get(i)
+    -- operation
+    if i>1 then
+      id_op_val=id_op_val+1
+      if id_op_val==s.id_op then
+        screen.level(15)
+      else
+        screen.level(2)
+      end
+      local x=xp-2
+      local y=yp+(i-1)*rowh
+      screen.move(x,y)
+      screen.text_center(ero.op)
     end
+    -- m, p, w
+    vs={ero.m,ero.p,ero.w}
     for j,v in ipairs(vs) do
+      id_op_val=id_op_val+1
+      if id_op_val==s.id_op then
+        screen.level(15)
+      else
+        screen.level(2)
+      end
       local x=xp+8+(j-1)*roww
       local y=yp+5+(i-1)*rowh
       screen.move(x,y)
       screen.text_center(v)
-    end
-  end
-  for i,v in ipairs(aaaa.operations) do
-    screen.level(2)
-    if aaaa.current==i then
-      screen.level(15)
-    end
-    if i>1 then
-      local x=xp-2
-      local y=yp+(i-1)*rowh
-      screen.move(x,y)
-      screen.text_center(ops[v])
     end
   end
 
@@ -181,7 +238,9 @@ function redraw()
 
   screen.level(0)
   screen.move(23,62)
-  screen.text_center("n=16, 1/4")
+  local ero=snd.eros[prop].get(1)
+  -- TODO: highlight these things when they get selected
+  screen.text_center(ero.steps.." "..divs_name[ero.div].." "..("play" and snd.playing or "stop"))
   screen.update()
 end
 

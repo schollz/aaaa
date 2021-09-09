@@ -71,38 +71,27 @@ function Ero:recalculate()
   end
 end
 
-
--- set_div(div) where div=1/4, 1/8, etc.
-function Ero:set_div(div)
-  for i,v in ipairs(divs) do
-    if v==div then
-      self.div=i
+function Ero:delta(kv,i)
+  for k,v in pairs(kv) do
+    if k=="div" or k=="steps" then
+      self[k]=self[k]+v
+    elseif i~=nil then
+      self.ero[i].k=self.ero[i].k+v
     end
   end
-end
-
-function Ero:set_map(map)
-  self.map=map
+  self:clamp()
   self:recalculate()
 end
 
-function Ero:set_steps(steps)
-  self.steps=steps
-  self:recalculate()
-end
-
-function Ero:set(i,kv)
-  for k,v in pairs(kv) do
-    self.ero[i].k=v
+function Ero:clamp()
+  for i=1,4 do
+    self.ero[i].op=util.clamp(self.ero[i].op,1,#ops)
+    self.ero[i].m=util.clamp(self.ero[i].m,-31,31)
+    self.ero[i].p=util.clamp(self.ero[i].p,0,self.steps)
+    self.ero[i].w=util.clamp(self.ero[i].w,0,self.steps-1)
   end
-  self:recalculate()
-end
-
-function Ero:delta(i,kv)
-  for k,v in pairs(kv) do
-    self.ero[i].k=self.ero[i].k+v
-  end
-  self:recalculate()
+  self.div=util.clamp(self.div,1,#divs)
+  self.steps=util.clamp(self.steps,0,16)
 end
 
 function Ero:get(i)
@@ -111,7 +100,7 @@ function Ero:get(i)
     r.k=v
   end
   r.op=ops[r.op]
-  r.div=divs[self.div]
+  r.div=self.div
   return r
 end
 
@@ -123,13 +112,14 @@ function Ero:inc(div)
   self.step=(self.step%self.steps)+1
 end
 
--- eror returns the current
+-- eror returns the current for all steps
 -- euclidean rhythm operation result
 function Ero:get_res()
   return self.res,self.resmap
 end
 
 -- get_mapped returns the mapped value
+-- for current step
 function Ero:get_mapped()
   return self.resmap[self.step]
 end

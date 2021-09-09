@@ -25,7 +25,7 @@ function Eros:trig()
   end
 end
 
-function Eros:set_trig(fn)
+function Eros:set_action(fn)
   self.fn_trig=fn
 end
 
@@ -40,29 +40,21 @@ function Eros:stop()
   self.playing=false
 end
 
-
-function Eros:set_div(k,div)
-  self.eros[k]:set_div(div)
+function Eros:toggle_play() 
+  if self.playing then 
+    self:stop()
+  else
+    self:play()
+  end
 end
 
-function Eros:set_steps(k,steps)
-  self.eros[k]:set_steps(div)
+
+function Eros:delta(prop,kv,i)
+  self.eros[prop]:delta(kv,i)
 end
 
-function Eros:set(k,i,kv)
-  self.eros[k]:set(i,kv)
-end
-
-function Eros:delta(k,i,kv)
-  self.eros[k]:delta(i,kv)
-end
-
-function Eros:get_prop_num()
-  return #self.eros
-end
-
-function Eros:get(k,i)
-  return self.eros[k]:get(i)
+function Eros:get(prop,i)
+  return self.eros[prop]:get(i)
 end
 
 -- inc increments the current step
@@ -78,8 +70,8 @@ end
 
 -- eror returns the current
 -- euclidean rhythm operation result
-function Eros:get_res(k)
-  return self.eros[k]:get_res()
+function Eros:get_res(prop)
+  return self.eros[prop]:get_res()
 end
 
 return Eros
