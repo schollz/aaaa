@@ -19,7 +19,7 @@ Ero=include("aaaa/lib/Ero")
 Eros=include("aaaa/lib/Eros")
 Synth=include("aaaa/lib/Synth")
 
-engine.name="PolyPerc"
+engine.name="Aaaa"
 -- program state
 s={
   id_snd=1,-- index of the current synth or sample
@@ -66,7 +66,6 @@ function init()
     end
   end)
 
-
   u.snd[1]:toggle_playing()
   u.snd[2]:toggle_playing()
   if not s.playing then
@@ -75,7 +74,6 @@ function init()
     s.lattice:stop()
   end
 end
-
 
 function enc(k,d)
   if shift then
@@ -166,7 +164,6 @@ function redraw()
     do return end
   end
   local prop=snd.props[s.id_prop]
-
 
   screen.level(15)
   screen.rect(1,1,46,63)
@@ -267,7 +264,6 @@ function redraw()
     end
   end
 
-
   screen.level(15)
   screen.rect(1,56,46,8)
   screen.fill()
@@ -278,7 +274,6 @@ function redraw()
   screen.update()
 end
 
-
 function rerun()
   norns.script.load(norns.state.script)
 end
@@ -286,7 +281,6 @@ end
 function r()
   rerun()
 end
-
 
 function sign(x)
   if x>0 then
@@ -296,8 +290,3 @@ function sign(x)
   end
   return 0
 end
-
-
-
-
-

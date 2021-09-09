@@ -41,10 +41,10 @@ function Synth:new(name)
   s.notes=MusicUtil.generate_scale_of_length(24,5,63)
   s:set_maps(maps)
   s:set_action(function(p)
+    -- stop any note that exceeded duration
+    Tabutil.print(p)
     if p.trigger>0 then
-      Tabutil.print(p)
-      engine.amp(p.velocity/127)
-      engine.hz(MusicUtil.note_num_to_freq(s.notes[p.pitch]))
+      print("playing note")
     end
   end)
   s.notes_on={}

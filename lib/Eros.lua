@@ -9,8 +9,6 @@ function Eros:new(o)
   return o
 end
 
-
-
 function Eros:trig()
   -- print("Eros: trig")
   local p={}
@@ -53,7 +51,6 @@ function Eros:toggle_playing()
   end
 end
 
-
 function Eros:delta(prop,kv,i)
   self.eros[prop]:delta(kv,i)
 end
@@ -68,10 +65,12 @@ function Eros:next(div)
     do return end
   end
   local trigged=false
-  for _,ero in pairs(self.eros) do
+  for prop,ero in pairs(self.eros) do
     if ero.div==div then
-      trigged=true
       ero:inc(div)
+    end
+    if prop=="trigger" then
+      trigged=true
     end
   end
   if trigged then
