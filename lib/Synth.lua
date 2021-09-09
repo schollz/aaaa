@@ -39,15 +39,25 @@ function Synth:new(name)
   -- https://www.lua.org/pil/16.2.html
   local s=eros:new()
   s.notes=MusicUtil.generate_scale_of_length(24,5,63)
+  s.notes_on={}
   s:set_maps(maps)
   s:set_action(function(p)
     -- stop any note that exceeded duration
-    Tabutil.print(p)
+    for k,v in pairs(s.notes_on) do
+      s.notes_on[k].length=s.notes_on[k].length+1
+      if s.notes_on[k].duration==s.notes_on[k].length then
+        print("Synth: note off "..k)
+        s.notes_on[k]=nil
+        engine.synthy_note_off(k)
+      end
+    end
     if p.trigger>0 then
-      print("playing note")
+      local note=s.notes[p.pitch]
+      print("Synth: playing "..note.." at "..p.velocity.." for "..p.duration)
+      s.notes_on[note]={length=0,duration=p.duration}
+      engine.synthy_note_on(note,p.velocity/127)
     end
   end)
-  s.notes_on={}
   s.props={"trigger","pitch","velocity","duration","transpose"}
   s.name=name
   return s

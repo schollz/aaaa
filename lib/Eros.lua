@@ -68,9 +68,9 @@ function Eros:next(div)
   for prop,ero in pairs(self.eros) do
     if ero.div==div then
       ero:inc(div)
-    end
-    if prop=="trigger" then
-      trigged=true
+      if prop=="trigger" then
+        trigged=true
+      end
     end
   end
   if trigged then

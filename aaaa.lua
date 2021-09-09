@@ -36,7 +36,7 @@ local divs={1/32,1/16,1/8,1/4,1/2,1}
 local divs_name={"tn","sn","en","qn","hn","wn"}
 
 function init()
-  for i=1,2 do
+  for i=1,3 do
     u.snd[i]=Synth:new("synth "..i)
     for prop,_ in pairs(u.snd[i].eros) do
       u.snd[i].eros[prop]:random()
@@ -68,6 +68,7 @@ function init()
 
   u.snd[1]:toggle_playing()
   u.snd[2]:toggle_playing()
+  u.snd[3]:toggle_playing()
   if not s.playing then
     s.lattice:hard_restart()
   else
@@ -141,6 +142,7 @@ function key(k,z)
 
     elseif k==3 then
       u.snd[1]:toggle_playing()
+      u.snd[2]:toggle_playing()
       if not s.playing then
         s.lattice:hard_restart()
       else
