@@ -18,10 +18,8 @@ end
 function Chord:new(name)
   -- define maps for the synth type
   local maps={}
-  maps.pitch={}
   maps.velocity={}
   for i=1,63 do
-    table.insert(maps.pitch,i)
     table.insert(maps.velocity,(i-1)*2) -- 0 to 124 (sorta midi range)
   end
   -- middle duration is one note
@@ -31,11 +29,6 @@ function Chord:new(name)
   end
   for i=1,8 do
     table.insert(maps.duration,i)
-  end
-  -- middle transpose is 0
-  maps.transpose={}
-  for i=-12,12 do
-    table.insert(maps.transpose,i)
   end
   -- trigger is only 1 above 0
   maps.trigger={}
