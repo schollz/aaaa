@@ -16,6 +16,9 @@ function Eros:trig()
     -- print(k,ero:get_mapped())
     p[k]=ero:get_mapped()
   end
+  -- also return step of the trigger
+  -- (this is gauranteed to be defined)
+  p.step=self.eros.trigger.step
   if self.fn_trig~=nil then
     self.fn_trig(p)
   end
