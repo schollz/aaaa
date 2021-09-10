@@ -27,7 +27,8 @@ function Sample:new(name)
   s:set_maps(maps)
   s:set_action(function(p)
     if p.trigger>0 then
-      engine.sample(name,p.velocity/127,p.rate)
+      -- engine.sample_trigger("/home/we/dust/code/aaaa/samples/ch001.wav",0.5,1)
+      engine.sample_trigger(name,p.velocity/127*0.25,p.rate)
       Tabutil.print(p)
     end
   end)

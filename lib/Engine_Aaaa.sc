@@ -47,7 +47,7 @@ Engine_Aaaa : CroneEngine {
 			rate = Lag.kr(rate,rateLag);
 			rate = rate*BufRateScale.kr(bufnum);
 			frames = BufFrames.kr(bufnum);
-			duration = frames*(end-start)/rate.abs/s.sampleRate*loops;
+			duration = frames*(end-start)/rate.abs/context.server.sampleRate*loops;
 
 			// envelope to clamp looping
 			env=EnvGen.ar(
@@ -95,17 +95,19 @@ Engine_Aaaa : CroneEngine {
 			var amp=msg[2];
 			var rate=msg[3];
 			if (sampleVoiceBuffer.at(file)==nil,{
+				("loading "++file).postln;
 				sampleVoiceBuffer.put(file,Buffer.read(context.server,file,action:{
 					arg buffer;
+					("loaded "++file).postln;
 					sampleVoice.put(file,
-						Synth.new(context.server,"samplePlayer",[
+						Synth.new("samplePlayer",[
 							\t_trig,1,
 							\bufnum,buffer,
 							\amp,amp,
 							\rate,rate,
 							\out,0,
 						]);
-					);
+					);					
 				}));
 			},{
 				sampleVoice.at(file).set(
@@ -339,35 +341,35 @@ Engine_Aaaa : CroneEngine {
 		});
 		this.addCommand("synthy_attack","f",{ arg msg;
 			synthyParameters.put("attack",msg[1]);
-			synthyVoices.keysValuesDo({ arg note, syn;
-				if (syn.isRunning==true,{
-					syn.set(\attack,msg[1]);
-				});
-			});
+			// synthyVoices.keysValuesDo({ arg note, syn;
+			// 	if (syn.isRunning==true,{
+			// 		syn.set(\attack,msg[1]);
+			// 	});
+			// });
 		});
 		this.addCommand("synthy_decay","f",{ arg msg;
 			synthyParameters.put("decay",msg[1]);
-			synthyVoices.keysValuesDo({ arg note, syn;
-				if (syn.isRunning==true,{
-					syn.set(\decay,msg[1]);
-				});
-			});
+			// synthyVoices.keysValuesDo({ arg note, syn;
+			// 	if (syn.isRunning==true,{
+			// 		syn.set(\decay,msg[1]);
+			// 	});
+			// });
 		});
 		this.addCommand("synthy_sustain","f",{ arg msg;
 			synthyParameters.put("sustain",msg[1]);
-			synthyVoices.keysValuesDo({ arg note, syn;
-				if (syn.isRunning==true,{
-					syn.set(\sustain,msg[1]);
-				});
-			});
+			// synthyVoices.keysValuesDo({ arg note, syn;
+			// 	if (syn.isRunning==true,{
+			// 		syn.set(\sustain,msg[1]);
+			// 	});
+			// });
 		});
 		this.addCommand("synthy_release","f",{ arg msg;
 			synthyParameters.put("release",msg[1]);
-			synthyVoices.keysValuesDo({ arg note, syn;
-				if (syn.isRunning==true,{
-					syn.set(\release,msg[1]);
-				});
-			});
+			// synthyVoices.keysValuesDo({ arg note, syn;
+			// 	if (syn.isRunning==true,{
+			// 		syn.set(\release,msg[1]);
+			// 	});
+			// });
 		});
 		this.addCommand("synthy_portamento","f",{ arg msg;
 			synthyParameters.put("portamento",msg[1]);
@@ -416,6 +418,8 @@ Engine_Aaaa : CroneEngine {
 		synthyBusFx.free;
 		synthySynthFX.free;
 		synthyVoices.keysValuesDo({ arg key, value; value.free; });
+		sampleVoice.keysValuesDo({ arg key, value; value.free; });
+		sampleVoiceBuffer.keysValuesDo({ arg key, value; value.free; });
 		// </synthy>
 	}
 }

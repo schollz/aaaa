@@ -38,7 +38,10 @@ function Synth:new(name)
   -- self parameter should no refer to Synth
   -- https://www.lua.org/pil/16.2.html
   local s=eros:new()
-  s.notes=MusicUtil.generate_scale_of_length(24,5,63)
+  s.notes=MusicUtil.generate_scale_of_length(24,1,63-30)
+  for _,v in ipairs(MusicUtil.generate_scale_of_length(48,1,30)) do
+    table.insert(s.notes,v)
+  end
   s.notes_on={}
   s:set_maps(maps)
   s:set_action(function(p)
@@ -55,6 +58,8 @@ function Synth:new(name)
       local note=s.notes[p.pitch]
       print("Synth: playing "..note.." at "..p.velocity.." for "..p.duration)
       s.notes_on[note]={length=0,duration=p.duration}
+      engine.synthy_attack(0.01)
+      engine.synthy_release(0.1)
       engine.synthy_note_on(note,p.velocity/127)
     end
   end)

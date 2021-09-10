@@ -19,6 +19,7 @@ Ero=include("aaaa/lib/Ero")
 Eros=include("aaaa/lib/Eros")
 Synth=include("aaaa/lib/Synth")
 Sample=include("aaaa/lib/Sample")
+Chord=include("aaaa/lib/Chord")
 
 engine.name="Aaaa"
 
@@ -38,13 +39,35 @@ local divs={1/32,1/16,1/8,1/4,1/2,1}
 local divs_name={"tn","sn","en","qn","hn","wn"}
 
 function init()
-  -- for i=1,3 do
-  --   u.snd[i]=Synth:new("synth "..i)
-  --   for prop,_ in pairs(u.snd[i].eros) do
-  --     u.snd[i].eros[prop]:random()
-  --   end
+  u.snd={}
+  -- for i=1,1 do
+  --   table.insert(u.snd,Synth:new("synth "..i))
   -- end
-  u.snd[1]=Sample:new("/home/we/dust/code/aaaa/samples/ch001.wav")
+  -- for _, snd in ipairs(u.snd) do
+  --   snd.eros.trigger.ero[1].p=13
+  --   snd.eros.trigger.ero[1].m=30
+  --   snd.eros.trigger:recalculate()
+  --   snd.eros.trigger.div=1
+  --   snd.eros.pitch.div=1
+  --   snd.eros.pitch:random()
+  -- end
+  table.insert(u.snd,Sample:new("/home/we/dust/code/aaaa/samples/ch001.wav"))
+  u.snd[#u.snd].eros.trigger.ero[1].p=13
+  u.snd[#u.snd].eros.rate:random()
+  u.snd[#u.snd].eros.velocity:random()
+  u.snd[#u.snd].eros.trigger.div=1
+  u.snd[#u.snd].eros.trigger:recalculate()
+  table.insert(u.snd,Sample:new("/home/we/dust/code/aaaa/samples/kick005.wav"))
+  u.snd[#u.snd].eros.trigger.ero[1].p=4
+  u.snd[#u.snd].eros.rate:random()
+  u.snd[#u.snd].eros.velocity:random()
+  u.snd[#u.snd].eros.trigger.div=2
+  u.snd[#u.snd].eros.trigger:recalculate()
+  table.insert(u.snd,Chord:new("chords"))
+  u.snd[#u.snd].eros.trigger.ero[1].p=4
+  u.snd[#u.snd].eros.duration.ero[1].p=15
+  u.snd[#u.snd].eros.duration.ero[1].m=30
+  u.snd[#u.snd].eros.trigger:recalculate()
 
   s.playing=false
   s.lattice=Lattice:new{
@@ -72,9 +95,9 @@ function init()
     end
   end)
 
-  u.snd[1]:toggle_playing()
-  u.snd[2]:toggle_playing()
-  u.snd[3]:toggle_playing()
+  for _, snd in ipairs(u.snd) do
+    snd:toggle_playing()
+  end
   if not s.playing then
     s.lattice:hard_restart()
   else
@@ -147,8 +170,6 @@ function key(k,z)
     if k==2 then
 
     elseif k==3 then
-      u.snd[1]:toggle_playing()
-      u.snd[2]:toggle_playing()
       if not s.playing then
         s.lattice:hard_restart()
       else

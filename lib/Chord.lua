@@ -1,14 +1,15 @@
 local Chord={}
 local fourchords_=include("synthy/lib/fourchords")
+local music=include("synthy/lib/music")
 fourchords=fourchords_:new({fname=_path.code.."synthy/lib/4chords_top1000.txt"})
 
 local function new_chords()
   local chord_text=table.concat(fourchords:random_weighted()," ")
   local chords={}
   for chord in chord_text:gmatch("%S+") do
-    local data=music.chord_to_midi(chord..":"..params:get("chordy_octave"))
+    local data=music.chord_to_midi(chord..":3")
     if data~=nil then
-      table.insert(s.chords,{name=chord,data=data})
+      table.insert(chords,{name=chord,data=data})
       print("new_chords: added "..chord)
     end
   end
@@ -77,6 +78,8 @@ function Chord:new(name)
         -- TODO: for each note in chord, play it
         print("Chord: playing "..note.m.." at "..p.velocity.." for "..p.duration)
         s.notes_on[note.m]={length=0,duration=p.duration}
+        engine.synthy_attack(0.5)
+        engine.synthy_release(5)
         engine.synthy_note_on(note.m,p.velocity/127)
       end
     end

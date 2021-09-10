@@ -32,7 +32,7 @@ end
 
 function Ero:random()
   for i=1,4 do
-    self.ero[i].op=math.random(1,4) -- operation
+    self.ero[i].op=math.random(1,2) -- operation
     if self.ero[i].op>2 then
       self.ero[i].m=math.random(-2,2) -- multipler
       if self.ero[i].m==0 then
